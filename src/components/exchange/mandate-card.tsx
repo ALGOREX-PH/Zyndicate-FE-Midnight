@@ -11,7 +11,7 @@ import { formatDeadline } from "../../lib/format";
  * Resolve the unsealed title if this device holds the mandate key.
  * Otherwise the card shows a redaction bar — the honest default.
  */
-function useUnsealedTitle(mandate: MandateDto): string | null {
+export function useUnsealedTitle(mandate: MandateDto): string | null {
   const cached = getMandateMeta(mandate.id)?.title ?? null;
   const [title, setTitle] = useState<string | null>(cached);
 
