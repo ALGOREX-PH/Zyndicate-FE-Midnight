@@ -1,0 +1,38 @@
+{
+  "name": "zyndicate",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.2.5",
+    "@fontsource-variable/schibsted-grotesk": "^5.2.5",
+    "@fontsource/spline-sans-mono": "^5.2.5",
+    "@midnight-ntwrk/dapp-connector-api": "^4.0.1",
+    "@noble/ed25519": "^2.2.3",
+    "@noble/hashes": "^1.8.0",
+    "@tanstack/react-query": "^5.80.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.6.0",
+    "semver": "^7.7.0",
+    "zod": "^3.25.0",
+    "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.8",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/semver": "^7.7.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "tailwindcss": "^4.1.8",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}
