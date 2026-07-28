@@ -106,4 +106,34 @@
   .eyebrow {
     @apply font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-fog;
   }
+
+  /* landing reveal — disabled globally under prefers-reduced-motion */
+  .animate-rise {
+    animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-seal {
+    transform-origin: left center;
+    animation: seal-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes seal-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
