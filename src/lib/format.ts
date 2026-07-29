@@ -41,9 +41,9 @@ export function formatDateTime(value: TimestampInput): string {
 }
 
 /** "in 3d 4h" / "2h left" / "closed" — for deadlines. */
-export function formatDeadline(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const target = new Date(iso).getTime();
+export function formatDeadline(value: TimestampInput): string {
+  if (value === null || value === undefined || value === "") return "—";
+  const target = new Date(value).getTime();
   if (Number.isNaN(target)) return "—";
   const diff = target - Date.now();
   if (diff <= 0) return "closed";
