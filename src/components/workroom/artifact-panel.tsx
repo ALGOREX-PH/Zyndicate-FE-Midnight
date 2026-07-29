@@ -40,7 +40,7 @@ export function ArtifactPanel({
       await addArtifact.mutateAsync({
         name: file.name,
         digest,
-        version: String(priorVersions + 1),
+        version: priorVersions + 1,
         ciphertext,
         nonce,
       });
@@ -164,9 +164,7 @@ export function ArtifactPanel({
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-bone">
                   {artifact.name}
-                  <span className="ml-2 font-mono text-[10px] text-dim">
-                    v{artifact.version ?? "1"}
-                  </span>
+                  <span className="ml-2 font-mono text-[10px] text-dim">v{artifact.version}</span>
                 </p>
                 {artifact.digest && (
                   <div className="mt-1">
