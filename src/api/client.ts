@@ -9,7 +9,17 @@
 import type { z } from "zod";
 import { useSessionStore } from "../store/session";
 
-const BASE = "/api/v1";
+/**
+ * Where the coordination service lives.
+ *
+ * In development this stays relative and Vite proxies `/api` to localhost:4000.
+ * In a deployed build set `VITE_API_BASE_URL` to the API origin (e.g. the
+ * Render service URL) — that origin must also list this site in CORS_ORIGINS.
+ * Leaving it unset keeps the relative path, which is what you want if the host
+ * rewrites `/api` to the backend itself.
+ */
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
+const BASE = `${API_ORIGIN}/api/v1`;
 
 export class ApiError extends Error {
   readonly code: string;
