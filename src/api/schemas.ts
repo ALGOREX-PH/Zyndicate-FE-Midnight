@@ -93,28 +93,45 @@ export const IdentityEnvelopeSchema = envelope("identity", IdentitySchema);
 
 /* -------------------------------- mandates -------------------------------- */
 
+/**
+ * The caller's role on a mandate, as decided by the backend from
+ * `principalKey`, the awarded bid's `operatorKey` and `evaluatorKey`.
+ * `null` (or absent, on a Class A summary) means outsider.
+ */
+export const VIEWER_ROLES = ["principal", "operator", "evaluator"] as const;
+export type ViewerRole = (typeof VIEWER_ROLES)[number];
+export const ViewerRoleSchema = z.enum(VIEWER_ROLES);
+
 export const MandateSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String),
-    publicDomain: z.string().catch("unspecified"),
+    id: z.string(),
+    publicDomain: z.string(),
     complexityBand: z.string().nullish(),
     discoveryMode: z.string().nullish(),
     state: MandateStateSchema,
     bidDeadline: TimestampSchema,
     executionDeadline: TimestampSchema,
+    mandateCommitment: z.string(),
+    covenantCommitment: z.string(),
     rewardBand: z.string().nullish(),
-    mandateCommitment: z.string().nullish(),
-    covenantCommitment: z.string().nullish(),
-    encryptedPackage: EncryptedPayloadSchema.nullish(),
-    principalPublicKey: z.string().nullish(),
-    awardedBidId: z.union([z.string(), z.number()]).transform(String).nullish(),
-    bidCount: z.number().nullish(),
-    mine: z.boolean().nullish(),
+    chainAddress: z.string().nullish(),
     createdAt: TimestampSchema,
+    updatedAt: TimestampSchema,
+    /* Detail-only. Absent on the Class A summaries returned by GET /mandates. */
+    viewerRole: ViewerRoleSchema.nullish(),
+    /* Participant-only. Absent for outsiders. */
+    encryptedPackage: EncryptedPayloadSchema.nullish(),
+    principalKey: z.string().nullish(),
+    evaluatorKey: z.string().nullish(),
+    awardedBidId: z.string().nullish(),
+    awardAcceptedAt: TimestampSchema,
   })
   .passthrough();
 
 export type MandateDto = z.infer<typeof MandateSchema>;
+
+/** `POST /mandates`, `GET /mandates/:id`, `/state`, `/award`, `/accept`. */
+export const MandateEnvelopeSchema = envelope("mandate", MandateSchema);
 
 export function paginated<T extends z.ZodTypeAny>(item: T) {
   return z
