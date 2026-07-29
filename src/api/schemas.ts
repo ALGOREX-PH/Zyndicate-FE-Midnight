@@ -191,7 +191,7 @@ export const CredentialSchema = z
     domain: z.string().catch("unspecified"),
     kind: z.string().catch("credential"),
     commitment: z.string().nullish(),
-    issuedAt: z.string().nullish(),
+    issuedAt: TimestampSchema,
   })
   .passthrough();
 
@@ -204,7 +204,7 @@ export const ReceiptSchema = z
     kind: z.string().nullish(),
     domain: z.string().nullish(),
     commitment: z.string().nullish(),
-    issuedAt: z.string().nullish(),
+    issuedAt: TimestampSchema,
   })
   .passthrough();
 
