@@ -5,7 +5,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import { ChallengeSchema, IdentitySchema, VerifySchema } from "./schemas";
+import { ChallengeSchema, IdentityEnvelopeSchema, VerifySchema } from "./schemas";
 import { getPublicKeyHex, signAuthChallenge } from "../lib/identity";
 import { useSessionStore } from "../store/session";
 
@@ -26,7 +26,7 @@ export async function login(): Promise<void> {
       body: { publicKey, nonce, signature },
       auth: false,
     });
-    store.setSession(result.token, result.identity?.displayName ?? null);
+    store.setSession(result.token, result.identity.displayName);
   } catch (e) {
     store.setStatus("offline");
     throw e;
@@ -59,7 +59,7 @@ export function useMe() {
   const token = useSessionStore((s) => s.token);
   return useQuery({
     queryKey: ["me"],
-    queryFn: () => api(IdentitySchema, "/me"),
+    queryFn: () => api(IdentityEnvelopeSchema, "/me"),
     enabled: !!token,
   });
 }
@@ -68,9 +68,9 @@ export function useUpdateDisplayName() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (displayName: string) =>
-      api(IdentitySchema, "/me", { method: "PUT", body: { displayName } }),
+      api(IdentityEnvelopeSchema, "/me", { method: "PUT", body: { displayName } }),
     onSuccess: (identity) => {
-      useSessionStore.getState().setDisplayName(identity.displayName ?? null);
+      useSessionStore.getState().setDisplayName(identity.displayName);
       void queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });
