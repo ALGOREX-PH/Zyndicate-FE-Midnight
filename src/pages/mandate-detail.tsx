@@ -1,7 +1,6 @@
 import { useParams } from "react-router";
 import { useMandate } from "../api/mandates";
 import { isApiError } from "../api/client";
-import { useSessionStore } from "../store/session";
 import { StatePill, Badge } from "../components/ui/state-pill";
 import { Skeleton } from "../components/ui/skeleton";
 import { EmptyState } from "../components/ui/empty-state";
@@ -20,14 +19,13 @@ import { formatDateTime } from "../lib/format";
 import type { MandateDto } from "../api/schemas";
 
 function DetailBody({ mandate }: { mandate: MandateDto }) {
-  const myKey = useSessionStore((s) => s.publicKey);
   const title = useUnsealedTitle(mandate);
   const holdsKey = !!getMandateKey(mandate.id);
 
-  const isPrincipal =
-    mandate.principalPublicKey != null
-      ? mandate.principalPublicKey === myKey
-      : mandate.mine === true;
+  // The backend decides the caller's role from principalKey, the awarded bid's
+  // operatorKey and evaluatorKey. `null`/absent means outsider.
+  const viewerRole = mandate.viewerRole ?? null;
+  const isPrincipal = viewerRole === "principal";
 
   return (
     <div>
@@ -36,7 +34,9 @@ function DetailBody({ mandate }: { mandate: MandateDto }) {
           {domainLabel(mandate.publicDomain)}
         </span>
         <StatePill state={mandate.state} />
-        {isPrincipal && <Badge tone="vio">You are the Principal</Badge>}
+        {viewerRole === "principal" && <Badge tone="vio">You are the Principal</Badge>}
+        {viewerRole === "operator" && <Badge tone="vio">You are the Operator</Badge>}
+        {viewerRole === "evaluator" && <Badge tone="vio">You are the Evaluator</Badge>}
         {holdsKey && !isPrincipal && <Badge tone="phosphor">Key held</Badge>}
       </div>
 
@@ -64,7 +64,7 @@ function DetailBody({ mandate }: { mandate: MandateDto }) {
           ) : (
             <OperatorPanel mandate={mandate} />
           )}
-          <FlowPanel mandate={mandate} isPrincipal={isPrincipal} />
+          <FlowPanel mandate={mandate} viewerRole={viewerRole} />
         </div>
 
         <div className="space-y-6">
