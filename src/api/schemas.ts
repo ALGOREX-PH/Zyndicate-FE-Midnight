@@ -182,41 +182,59 @@ export const BidListSchema = itemsOf(BidSchema);
 
 /* -------------------------------- workrooms ------------------------------- */
 
+export const WorkroomMemberSchema = z
+  .object({ publicKey: z.string(), role: ViewerRoleSchema })
+  .passthrough();
+
+export type WorkroomMemberDto = z.infer<typeof WorkroomMemberSchema>;
+
 export const WorkroomSchema = z
   .object({
-    mandateId: z.union([z.string(), z.number()]).transform(String).nullish(),
-    participants: z.array(z.string()).nullish(),
+    mandateId: z.string(),
+    state: z.string(),
     createdAt: TimestampSchema,
+    /** Principal + awarded operator + designated evaluator. */
+    members: z.array(WorkroomMemberSchema),
   })
   .passthrough();
 
+export type WorkroomDto = z.infer<typeof WorkroomSchema>;
+export const WorkroomEnvelopeSchema = envelope("workroom", WorkroomSchema);
+
 export const WorkroomMessageSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String),
+    id: z.string(),
+    mandateId: z.string().nullish(),
+    senderKey: z.string(),
     ciphertext: z.string(),
     nonce: z.string(),
-    senderPublicKey: z.string().nullish(),
     createdAt: TimestampSchema,
   })
   .passthrough();
 
 export type WorkroomMessageDto = z.infer<typeof WorkroomMessageSchema>;
-export const WorkroomMessageListSchema = z.array(WorkroomMessageSchema).catch([]);
+export const WorkroomMessageEnvelopeSchema = envelope("message", WorkroomMessageSchema);
+/** Paginated envelope; the thread only needs the rows. */
+export const WorkroomMessageListSchema = itemsOf(WorkroomMessageSchema);
 
 export const ArtifactSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String),
-    name: z.string().catch("artifact"),
-    digest: z.string().nullish(),
-    version: z.union([z.string(), z.number()]).transform(String).nullish(),
-    ciphertext: z.string().nullish(),
-    nonce: z.string().nullish(),
+    id: z.string(),
+    mandateId: z.string().nullish(),
+    uploaderKey: z.string().nullish(),
+    name: z.string(),
+    digest: z.string(),
+    /** Client-managed integer version counter. */
+    version: z.number(),
+    ciphertext: z.string(),
+    nonce: z.string(),
     createdAt: TimestampSchema,
   })
   .passthrough();
 
 export type ArtifactDto = z.infer<typeof ArtifactSchema>;
-export const ArtifactListSchema = z.array(ArtifactSchema).catch([]);
+export const ArtifactEnvelopeSchema = envelope("artifact", ArtifactSchema);
+export const ArtifactListSchema = itemsOf(ArtifactSchema);
 
 /* ------------------------------ flow objects ------------------------------ */
 
