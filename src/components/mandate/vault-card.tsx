@@ -3,7 +3,7 @@ import { Badge } from "../ui/state-pill";
 import { DefinitionList } from "../ui/definition-list";
 import { Skeleton } from "../ui/skeleton";
 import { useVault } from "../../api/flow";
-import { humanize } from "../../lib/format";
+import { formatDateTime, humanize } from "../../lib/format";
 
 /** Vault status for a mandate: reserve, asset, release state, nullifier. */
 export function VaultCard({ mandateId }: { mandateId: string }) {
@@ -15,8 +15,8 @@ export function VaultCard({ mandateId }: { mandateId: string }) {
         eyebrow="Vault"
         title="Escrow"
         aside={
-          vault.data?.state ? (
-            <Badge tone={vault.data.state === "released" ? "phosphor" : "neutral"}>
+          vault.data ? (
+            <Badge tone={vault.data.settlement ? "phosphor" : "neutral"}>
               {humanize(vault.data.state)}
             </Badge>
           ) : undefined
@@ -40,13 +40,19 @@ export function VaultCard({ mandateId }: { mandateId: string }) {
       {vault.isSuccess && (
         <DefinitionList
           items={[
-            { label: "Reserve", value: vault.data.amountBand ?? "Sealed", mono: true },
-            { label: "Asset", value: vault.data.asset ?? "Development asset" },
-            ...(vault.data.settlementNullifier
-              ? [{ label: "Settlement nullifier", copy: vault.data.settlementNullifier }]
+            { label: "Reserve", value: "Sealed", mono: true },
+            { label: "Dispute", value: vault.data.disputeOpen ? "Open — frozen" : "None" },
+            ...(vault.data.settlement?.amountCommitment
+              ? [{ label: "Amount commitment", copy: vault.data.settlement.amountCommitment }]
               : []),
-            ...(vault.data.settledAt
-              ? [{ label: "Settled", value: new Date(vault.data.settledAt).toLocaleString() }]
+            ...(vault.data.settlement
+              ? [
+                  {
+                    label: "Settlement nullifier",
+                    copy: vault.data.settlement.settlementNullifier,
+                  },
+                  { label: "Settled", value: formatDateTime(vault.data.settlement.settledAt) },
+                ]
               : []),
           ]}
         />
