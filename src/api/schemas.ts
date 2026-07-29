@@ -23,6 +23,12 @@ export type MandateState = (typeof MANDATE_STATES)[number];
 
 export const MandateStateSchema = z.enum(MANDATE_STATES).catch("draft");
 
+/**
+ * The backend serializes instants as epoch milliseconds. ISO strings are
+ * accepted as well so a change of serialization cannot silently empty a list.
+ */
+export const TimestampSchema = z.union([z.string(), z.number()]).nullish();
+
 export const EncryptedPayloadSchema = z.object({
   ciphertext: z.string(),
   nonce: z.string(),
