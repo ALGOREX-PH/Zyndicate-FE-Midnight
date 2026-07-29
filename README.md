@@ -253,3 +253,78 @@ third-party font requests at runtime:
 
 Monospace is used semantically: anything cryptographic or machine-generated is rendered in mono, so a
 commitment is visually distinguishable from prose at a glance.
+
+---
+
+## Project structure
+
+```
+src/
+  api/            typed REST layer — one module per resource
+    client.ts       fetch wrapper: Bearer injection, ApiError normalization, zod validation
+    schemas.ts      zod schemas; every response is parsed before it reaches a component
+    auth.ts         challenge → ed25519 signature → Bearer token
+    mandates.ts  bids.ts  workrooms.ts  flow.ts  passport.ts
+  lib/
+    crypto.ts       AES-256-GCM, SHA-256, commitments + salts, local keyring
+    identity.ts     ed25519 Zyndicate identity, separate from the wallet
+    protocol.ts     domains, bands, discovery modes, COMMIT_DOMAINS, nullifier derivation
+    format.ts       dates, deadlines, hash truncation
+    mandate-meta.ts local-only mandate labels (titles are sealed server-side)
+  midnight/
+    connect-wallet.ts  REAL Lace / DApp connector v4 discovery + connection
+    config.ts          undeployed / preview / preprod endpoints
+    chain.ts           ChainSync interface + LocalChainAdapter stand-in
+  store/          zustand: session, wallet, network, toast
+  components/
+    ui/           button, card, dialog, field, stepper, tabs, state-pill,
+                  privacy-preview, empty-state, skeleton, toaster, …
+    shell/        app-shell, sidebar, topbar, network-badge, identity-chip,
+                  wallet-button, error-boundary
+    landing/  exchange/  compose/  mandate/  workroom/  settings/
+  pages/          one module per route
+  styles/index.css  Tailwind v4 @theme tokens, base layer, component layer
+```
+
+Architectural rules worth knowing before editing:
+
+* **Components never call `fetch`.** They call hooks in `src/api/*`, which call `api()` in
+  `client.ts`, which validates against a zod schema. An unexpected response shape becomes a typed
+  `ApiError("malformed_response")` rather than a runtime crash deep in a component.
+* **Cryptography never happens in a component body** — it happens in `src/lib/crypto.ts` and is
+  invoked from submit handlers, so the plaintext lifetime is a single async function scope.
+* **Chain calls go through `getChain(network)`**, never through a concrete adapter, so the local
+  stand-in can be swapped for the real one in one place.
+
+---
+
+## Backend API
+
+The frontend requires the **Zyndicate backend** (a separate service, built in parallel). It is
+expected at **`http://localhost:4000`** and reached at the base path **`/api/v1`**. Vite proxies
+`/api` to it in development — see [`vite.config.ts`](vite.config.ts):
+
+```ts
+server: { proxy: { "/api": { target: "http://localhost:4000", changeOrigin: true } } }
+```
+
+Endpoints consumed:
+
+| Area | Endpoints |
+| ---- | --------- |
+| Auth | `POST /auth/challenge`, `POST /auth/verify`, `GET|PUT /me` |
+| Mandates | `GET|POST /mandates`, `GET /mandates/:id`, `POST /mandates/:id/state` |
+| Bidding | `GET|POST /mandates/:id/bids`, `GET /mandates/:id/bids/:bidId`, `POST /mandates/:id/award`, `POST /mandates/:id/accept` |
+| Execution | `POST /mandates/:id/submissions`, `POST /mandates/:id/evaluations`, `POST /mandates/:id/settle` |
+| Workrooms | `GET /workrooms/:mandateId`, `…/messages`, `…/artifacts` |
+| Vault | `GET /vault/:mandateId` |
+| Disputes | `GET /disputes`, `POST /mandates/:id/disputes`, `POST /disputes/:id/ruling` |
+| Passport | `GET /passports/:publicKey`, `POST /passports/credentials`, `GET /me/receipts` |
+
+Every request body carries ciphertext and commitments only. The API is authenticated with a Bearer
+token obtained by signing an ed25519 challenge; a `401` clears the session automatically.
+
+**The app degrades gracefully when the backend is absent.** Auth failure is quiet and keeps the app
+browsable, and every data-driven view has explicit loading, empty, and error states — with a retry
+action — instead of a blank screen. This is verified: with nothing listening on port 4000, all
+eleven routes still render their shell and a labelled error or empty state.
