@@ -2,8 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, qs } from "./client";
 import {
-  MandateSchema,
-  OkSchema,
+  MandateEnvelopeSchema,
   PaginatedMandatesSchema,
   type EncryptedPayloadDto,
 } from "./schemas";
@@ -36,7 +35,7 @@ export function useMandates(filters: MandateFilters) {
 export function useMandate(id: string | undefined) {
   return useQuery({
     queryKey: ["mandate", id],
-    queryFn: () => api(MandateSchema, `/mandates/${id}`),
+    queryFn: () => api(MandateEnvelopeSchema, `/mandates/${id}`),
     enabled: !!id,
   });
 }
@@ -57,7 +56,7 @@ export function useCreateMandate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateMandateBody) =>
-      api(MandateSchema, "/mandates", { method: "POST", body }),
+      api(MandateEnvelopeSchema, "/mandates", { method: "POST", body }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["mandates"] });
     },
@@ -70,7 +69,10 @@ export function useMandateStateAction(mandateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (action: MandateStateAction) =>
-      api(OkSchema, `/mandates/${mandateId}/state`, { method: "POST", body: { action } }),
+      api(MandateEnvelopeSchema, `/mandates/${mandateId}/state`, {
+        method: "POST",
+        body: { action },
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["mandate", mandateId] });
       void queryClient.invalidateQueries({ queryKey: ["mandates"] });
