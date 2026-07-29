@@ -36,6 +36,32 @@ export const EncryptedPayloadSchema = z.object({
 
 export type EncryptedPayloadDto = z.infer<typeof EncryptedPayloadSchema>;
 
+/* ---------------------------- response envelopes -------------------------- */
+
+/**
+ * The backend wraps every single entity in a one-key envelope — `{ mandate }`,
+ * `{ bid }`, `{ workroom }`, `{ vault }`, `{ identity }`, … — so unwrap it here
+ * and hand callers the entity itself. A missing key is a contract break and
+ * fails the parse rather than degrading into an empty render.
+ */
+export function envelope<T extends z.ZodTypeAny>(key: string, inner: T) {
+  return z
+    .object({ [key]: inner })
+    .passthrough()
+    .transform((value) => value[key] as z.infer<T>);
+}
+
+/**
+ * List envelope: `{ items: [...] }`, with or without the pagination fields
+ * beside it. Unwraps to the array; a wrong shape fails rather than yielding [].
+ */
+export function itemsOf<T extends z.ZodTypeAny>(inner: T) {
+  return z
+    .object({ items: z.array(inner) })
+    .passthrough()
+    .transform((value) => value.items as z.infer<T>[]);
+}
+
 /* --------------------------------- auth ---------------------------------- */
 
 export const ChallengeSchema = z.object({ nonce: z.string() }).passthrough();
