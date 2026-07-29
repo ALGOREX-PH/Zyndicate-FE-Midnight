@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import type { MandateDto } from "../../api/schemas";
+import type { MandateDto, ViewerRole } from "../../api/schemas";
 import { Card, CardHeader } from "../ui/card";
 import { Button } from "../ui/button";
 import { Dialog } from "../ui/dialog";
@@ -290,11 +290,24 @@ const DISPUTABLE = ["awarded", "in_execution", "submitted", "accepted"];
 
 export function FlowPanel({
   mandate,
-  isPrincipal,
+  viewerRole,
 }: {
   mandate: MandateDto;
-  isPrincipal: boolean;
+  viewerRole: ViewerRole | null;
 }) {
+  const isPrincipal = viewerRole === "principal";
+  const isOperator = viewerRole === "operator";
+  /**
+   * Evaluation authority follows the covenant: a designated evaluatorKey takes
+   * it, otherwise evaluation is principal-led. This mirrors the backend's
+   * assertEvaluatorAuthority exactly.
+   */
+  const canEvaluate = mandate.evaluatorKey
+    ? viewerRole === "evaluator"
+    : viewerRole === "principal";
+  /** Only the principal or the awarded operator may open a dispute. */
+  const canDispute = isPrincipal || isOperator;
+
   const showWorkroomLink = [
     "awarded",
     "in_execution",
@@ -320,15 +333,17 @@ export function FlowPanel({
                 Workroom →
               </Link>
             )}
-            {DISPUTABLE.includes(mandate.state) && <DisputeButton mandate={mandate} />}
+            {canDispute && DISPUTABLE.includes(mandate.state) && (
+              <DisputeButton mandate={mandate} />
+            )}
           </div>
         }
       />
 
-      {mandate.state === "in_execution" && !isPrincipal && (
+      {mandate.state === "in_execution" && isOperator && (
         <SubmissionSection mandate={mandate} />
       )}
-      {mandate.state === "in_execution" && isPrincipal && (
+      {mandate.state === "in_execution" && !isOperator && (
         <p className="text-sm text-fog">
           Execution is under way in the encrypted workroom. You will be able to evaluate once a
           submission is committed.
@@ -336,7 +351,7 @@ export function FlowPanel({
       )}
 
       {mandate.state === "submitted" &&
-        (isPrincipal ? (
+        (canEvaluate ? (
           <EvaluationSection mandate={mandate} />
         ) : (
           <p className="text-sm text-fog">
