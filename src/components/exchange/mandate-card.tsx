@@ -79,16 +79,6 @@ export function MandateCard({ mandate }: { mandate: MandateDto }) {
           ·
         </span>
         <span title="Bid deadline">bids {formatDeadline(mandate.bidDeadline)}</span>
-        {typeof mandate.bidCount === "number" && (
-          <>
-            <span aria-hidden="true" className="text-dim">
-              ·
-            </span>
-            <span>
-              {mandate.bidCount} sealed bid{mandate.bidCount === 1 ? "" : "s"}
-            </span>
-          </>
-        )}
       </div>
     </Link>
   );
