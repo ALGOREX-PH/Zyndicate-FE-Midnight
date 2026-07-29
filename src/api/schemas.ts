@@ -162,7 +162,7 @@ export const VaultSchema = z
     amountBand: z.string().nullish(),
     asset: z.string().nullish(),
     settlementNullifier: z.string().nullish(),
-    settledAt: z.string().nullish(),
+    settledAt: TimestampSchema,
   })
   .passthrough();
 
