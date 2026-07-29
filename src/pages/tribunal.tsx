@@ -108,7 +108,7 @@ function RulingDialog({
 
 function DisputeRow({ dispute }: { dispute: DisputeDto }) {
   const [open, setOpen] = useState(false);
-  const closed = dispute.state === "resolved" || !!dispute.outcome;
+  const closed = dispute.status === "ruled";
 
   return (
     <Card className="flex flex-col gap-3">
@@ -118,7 +118,7 @@ function DisputeRow({ dispute }: { dispute: DisputeDto }) {
             Dispute {dispute.id}
           </span>
           <Badge tone={closed ? "phosphor" : "danger"}>
-            {closed ? `Resolved${dispute.outcome ? ` · ${humanize(dispute.outcome)}` : ""}` : "Frozen"}
+            {closed ? `Ruled${dispute.outcome ? ` · ${humanize(dispute.outcome)}` : ""}` : "Frozen"}
           </Badge>
         </div>
         <span className="font-mono text-[10px] text-dim">{formatDateTime(dispute.createdAt)}</span>
@@ -129,16 +129,12 @@ function DisputeRow({ dispute }: { dispute: DisputeDto }) {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
-        {dispute.mandateId ? (
-          <Link
-            to={`/mandates/${dispute.mandateId}`}
-            className="font-mono text-[11px] uppercase tracking-[0.12em] text-vio hover:underline"
-          >
-            View mandate →
-          </Link>
-        ) : (
-          <span />
-        )}
+        <Link
+          to={`/mandates/${dispute.mandateId}`}
+          className="font-mono text-[11px] uppercase tracking-[0.12em] text-vio hover:underline"
+        >
+          View mandate →
+        </Link>
         {!closed && (
           <Button size="sm" variant="primary" onClick={() => setOpen(true)}>
             Record ruling
@@ -152,7 +148,7 @@ function DisputeRow({ dispute }: { dispute: DisputeDto }) {
 }
 
 export function TribunalPage() {
-  const disputes = useDisputes(true);
+  const disputes = useDisputes();
 
   return (
     <div>
