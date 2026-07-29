@@ -328,3 +328,57 @@ token obtained by signing an ed25519 challenge; a `401` clears the session autom
 browsable, and every data-driven view has explicit loading, empty, and error states — with a retry
 action — instead of a blank screen. This is verified: with nothing listening on port 4000, all
 eleven routes still render their shell and a labelled error or empty state.
+
+---
+
+## Getting started
+
+### Prerequisites
+
+* **Node.js 22+** and npm
+* The **Zyndicate backend** running on `http://localhost:4000` — start this *first*, or the Exchange,
+  Workrooms, Vault, and Tribunal will render their error states
+* **[Lace wallet](https://www.lace.io/)** with Midnight support, for wallet connection (optional —
+  the app is fully browsable without it)
+* Optionally, a local Midnight stack (node + indexer + proof server) if you are working toward the
+  `undeployed` network
+
+### Install and run
+
+```bash
+npm install
+npm run dev
+```
+
+The dev server listens on **http://localhost:5173**, with `/api` proxied to the backend on port 4000.
+
+### First run
+
+On first load the app generates an ed25519 Zyndicate identity in `localStorage` and authenticates
+against the backend automatically. **Export your identity secret and keyring from Settings before you
+clear browser storage** — there is no server-side recovery, by design.
+
+To exercise the full flow you need two browser profiles (or a normal window plus a private one): one
+acting as Principal, one as Operator. They are distinct identities because they hold distinct keys.
+After an award, the Principal copies the workroom key from the mandate page and passes it to the
+Operator out of band; the Operator pastes it into the workroom key gate to decrypt the thread.
+
+### Scripts
+
+| Script | What it does |
+| ------ | ------------ |
+| `npm run dev` | Vite dev server on port 5173 with the `/api` proxy |
+| `npm run build` | `tsc -b` project build, then `vite build` to `dist/` |
+| `npm run typecheck` | `tsc -b` only |
+| `npm run preview` | Serve the production build locally |
+
+Type checking is strict, and `npm run build` fails on any type error — the typecheck is not
+advisory.
+
+### Build output
+
+Vendor code is split into cacheable chunks via `build.rollupOptions.output.manualChunks` in
+`vite.config.ts` (`vendor-react`, `vendor-query`, `vendor-crypto`, `vendor-util`), which keeps the
+application chunk small and lets the framework bundles stay in cache across deploys. Fonts are
+bundled locally as woff2/woff, so the production app makes **no third-party network requests** on
+load — appropriate for a privacy product, where a font CDN would otherwise observe every page view.
