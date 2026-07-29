@@ -108,7 +108,7 @@ export function MessageThread({
       {messages.isSuccess && messages.data.length > 0 && (
         <ul className="max-h-96 space-y-3 overflow-y-auto pr-1">
           {messages.data.map((m) => {
-            const own = !!myKey && m.senderPublicKey === myKey;
+            const own = !!myKey && m.senderKey === myKey;
             const text = texts[m.id];
             return (
               <li key={m.id} className={cx("flex", own && "justify-end")}>
