@@ -44,7 +44,7 @@ export const IdentitySchema = z
   .object({
     publicKey: z.string().optional(),
     displayName: z.string().nullish(),
-    createdAt: z.string().nullish(),
+    createdAt: TimestampSchema,
   })
   .passthrough();
 
@@ -76,7 +76,7 @@ export const MandateSchema = z
     awardedBidId: z.union([z.string(), z.number()]).transform(String).nullish(),
     bidCount: z.number().nullish(),
     mine: z.boolean().nullish(),
-    createdAt: z.string().nullish(),
+    createdAt: TimestampSchema,
   })
   .passthrough();
 
@@ -108,7 +108,7 @@ export const BidSchema = z
     operatorPublicKey: z.string().nullish(),
     state: z.string().nullish(),
     mine: z.boolean().nullish(),
-    createdAt: z.string().nullish(),
+    createdAt: TimestampSchema,
   })
   .passthrough();
 
@@ -121,7 +121,7 @@ export const WorkroomSchema = z
   .object({
     mandateId: z.union([z.string(), z.number()]).transform(String).nullish(),
     participants: z.array(z.string()).nullish(),
-    createdAt: z.string().nullish(),
+    createdAt: TimestampSchema,
   })
   .passthrough();
 
@@ -131,7 +131,7 @@ export const WorkroomMessageSchema = z
     ciphertext: z.string(),
     nonce: z.string(),
     senderPublicKey: z.string().nullish(),
-    createdAt: z.string().nullish(),
+    createdAt: TimestampSchema,
   })
   .passthrough();
 
@@ -146,7 +146,7 @@ export const ArtifactSchema = z
     version: z.union([z.string(), z.number()]).transform(String).nullish(),
     ciphertext: z.string().nullish(),
     nonce: z.string().nullish(),
-    createdAt: z.string().nullish(),
+    createdAt: TimestampSchema,
   })
   .passthrough();
 
@@ -176,7 +176,7 @@ export const DisputeSchema = z
     outcome: z.string().nullish(),
     disputeCommitment: z.string().nullish(),
     rulingCommitment: z.string().nullish(),
-    createdAt: z.string().nullish(),
+    createdAt: TimestampSchema,
   })
   .passthrough();
 
