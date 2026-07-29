@@ -10,20 +10,24 @@ import { useBids, useAwardBid } from "../../api/bids";
 import { useMandateStateAction, type MandateStateAction } from "../../api/mandates";
 import { getChain } from "../../midnight/chain";
 import { useNetworkStore } from "../../store/network";
+import { useSessionStore } from "../../store/session";
 import { toast } from "../../store/toast";
 import { formatDateTime } from "../../lib/format";
 
 function BidRow({
   bid,
+  myKey,
   canAward,
   onAward,
   awarding,
 }: {
   bid: BidDto;
+  myKey: string | null;
   canAward: boolean;
   onAward: (bid: BidDto) => void;
   awarding: boolean;
 }) {
+  const own = !!myKey && bid.operatorKey === myKey;
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-3 first:border-t-0">
       <div className="min-w-0">
@@ -31,8 +35,9 @@ function BidRow({
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fog">
             Sealed bid
           </span>
-          {bid.mine && <Badge tone="vio">Yours</Badge>}
-          {bid.state === "awarded" && <Badge tone="phosphor">Awarded</Badge>}
+          {own && <Badge tone="vio">Yours</Badge>}
+          {bid.status === "awarded" && <Badge tone="phosphor">Awarded</Badge>}
+          {bid.status === "withdrawn" && <Badge tone="neutral">Withdrawn</Badge>}
         </div>
         {bid.bidCommitment && (
           <div className="mt-1">
@@ -45,7 +50,7 @@ function BidRow({
       </div>
       <div className="flex items-center gap-3">
         <span className="redact w-20" aria-label="Bid value sealed" />
-        {canAward && (
+        {canAward && bid.status === "pending" && (
           <Button size="sm" variant="proof" loading={awarding} onClick={() => onAward(bid)}>
             Award
           </Button>
@@ -61,6 +66,7 @@ export function PrincipalPanel({ mandate }: { mandate: MandateDto }) {
   const stateAction = useMandateStateAction(mandate.id);
   const awardBid = useAwardBid(mandate.id);
   const networkId = useNetworkStore((s) => s.networkId);
+  const myKey = useSessionStore((s) => s.publicKey);
   const [awardingId, setAwardingId] = useState<string | null>(null);
 
   const runAction = (action: MandateStateAction, label: string) => {
@@ -173,6 +179,7 @@ export function PrincipalPanel({ mandate }: { mandate: MandateDto }) {
               <BidRow
                 key={bid.id}
                 bid={bid}
+                myKey={myKey}
                 canAward={canAward}
                 onAward={handleAward}
                 awarding={awardingId === bid.id && awardBid.isPending}
