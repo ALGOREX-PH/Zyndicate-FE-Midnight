@@ -145,3 +145,56 @@ lifecycle stages.
 | **F — Ephemeral** | Temporary, meant to be discarded | decrypted working files, session token |
 
 The Exchange renders only Class A data. Everything richer requires a key the server does not have.
+
+---
+
+## Midnight integration status
+
+Being precise about this matters more than sounding finished. There are two halves, and they are at
+different stages.
+
+### Real: wallet connection
+
+[`src/midnight/connect-wallet.ts`](src/midnight/connect-wallet.ts) is a genuine **DApp connector v4**
+integration against `@midnight-ntwrk/dapp-connector-api`.
+
+* Wallets inject under `window.midnight.{uuid}` with a freshly generated UUID. The code **discovers**
+  the provider by iterating that object and semver-matching `apiVersion` against `4.x` — it does not
+  hardcode `window.midnight.mnLace`, which is the legacy API.
+* Extensions inject asynchronously, so discovery polls every 100 ms for up to 1 s before giving up.
+* `connect(networkId)` opens Lace's approval UI and rejects if the user declines or is on the wrong
+  network; `getConnectionStatus()` is then called immediately so an unusable session fails loudly at
+  connect time rather than at first use.
+* Connection state lives in `src/store/wallet.ts` and surfaces in `components/shell/wallet-button.tsx`
+  and the Settings page, which distinguishes "no 4.x connector detected" from "detected but not
+  connected".
+
+Note that `@midnight-ntwrk/dapp-connector-api` is consumed as **types only** — the connector is an
+interface contract fulfilled at runtime by the injected extension, which is why no Midnight vendor
+chunk appears in the build output.
+
+### Standing in: the contract layer
+
+[`src/midnight/chain.ts`](src/midnight/chain.ts) defines `ChainSync`, a typed interface covering the
+full PRD §16.5 circuit surface — `deployMandate`, `submitBid`, `awardBid`, `acceptAward`,
+`commitSubmission`, `recordEvaluation`, `settleMandate`, `openDispute`, `resolveDispute`.
+
+The only implementation today is **`LocalChainAdapter`**, and it is documented as a stand-in. It
+mirrors each protocol transition locally: it records a receipt (kind, network, timestamp) in
+`localStorage` under `zyn.chain.receipts` and derives a deterministic pseudo transaction hash. Every
+receipt it produces carries **`local: true`**, and the UI renders that flag rather than passing local
+receipts off as settled chain state.
+
+**No transaction is submitted to a Midnight node today, and no zk proof is generated.** That is
+waiting on:
+
+1. the compiled Compact artifacts from the companion **Zyndicate-Smart-Contract-Midnight** repository,
+2. a running node + indexer + proof-server stack (endpoints for `undeployed` / `preview` / `preprod`
+   are already configured in [`src/midnight/config.ts`](src/midnight/config.ts)), and
+3. Midnight.js providers wired to `deployContract` / `findDeployedContract`.
+
+When those land, a `MidnightChainAdapter` implementing the same `ChainSync` interface replaces the
+local one inside `getChain()` — **no UI code changes**. That is the entire reason the boundary exists.
+
+The proof server is always configured as `localhost:6300`, including for the public testnets, because
+proof generation consumes private witness data and must never leave the operator's machine.
