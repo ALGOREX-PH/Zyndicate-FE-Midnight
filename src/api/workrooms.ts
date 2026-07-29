@@ -2,17 +2,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import {
+  ArtifactEnvelopeSchema,
   ArtifactListSchema,
-  ArtifactSchema,
+  WorkroomEnvelopeSchema,
+  WorkroomMessageEnvelopeSchema,
   WorkroomMessageListSchema,
-  WorkroomMessageSchema,
-  WorkroomSchema,
 } from "./schemas";
 
 export function useWorkroom(mandateId: string | undefined) {
   return useQuery({
     queryKey: ["workroom", mandateId],
-    queryFn: () => api(WorkroomSchema, `/workrooms/${mandateId}`),
+    queryFn: () => api(WorkroomEnvelopeSchema, `/workrooms/${mandateId}`),
     enabled: !!mandateId,
   });
 }
@@ -30,7 +30,7 @@ export function useSendMessage(mandateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: { ciphertext: string; nonce: string }) =>
-      api(WorkroomMessageSchema, `/workrooms/${mandateId}/messages`, {
+      api(WorkroomMessageEnvelopeSchema, `/workrooms/${mandateId}/messages`, {
         method: "POST",
         body,
       }),
@@ -51,7 +51,8 @@ export function useArtifacts(mandateId: string | undefined) {
 export interface AddArtifactBody {
   name: string;
   digest: string;
-  version: string;
+  /** Integer counter — the backend rejects a string. */
+  version: number;
   ciphertext: string;
   nonce: string;
 }
@@ -60,7 +61,7 @@ export function useAddArtifact(mandateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: AddArtifactBody) =>
-      api(ArtifactSchema, `/workrooms/${mandateId}/artifacts`, { method: "POST", body }),
+      api(ArtifactEnvelopeSchema, `/workrooms/${mandateId}/artifacts`, { method: "POST", body }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["workroom", mandateId, "artifacts"] });
     },
