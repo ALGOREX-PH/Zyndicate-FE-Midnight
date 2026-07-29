@@ -98,7 +98,9 @@ export function WorkroomsIndexPage() {
                       )}
                     </div>
                     <p className="mt-3 border-t border-line pt-3 font-mono text-[10px] tracking-[0.06em] text-dim">
-                      {hasKey ? "✓ key held" : "⚿ key not on this device"} · execution{" "}
+                      <span aria-hidden="true">{hasKey ? "✓" : "⚿"}</span>{" "}
+                      {hasKey ? "key held" : "key not on this device"}{" "}
+                      <span aria-hidden="true">·</span> execution{" "}
                       {formatDeadline(m.executionDeadline)}
                     </p>
                   </Link>
