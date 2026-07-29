@@ -395,6 +395,14 @@ application chunk small and lets the framework bundles stay in cache across depl
 bundled locally as woff2/woff, so the production app makes **no third-party network requests** on
 load — appropriate for a privacy product, where a font CDN would otherwise observe every page view.
 
+### Deploying
+
+The app is a static SPA and deploys to Vercel as-is; [`vercel.json`](vercel.json) carries the
+build settings, the client-side routing fallback, and cache/security headers. Point
+`VITE_API_BASE_URL` at the deployed coordination service and add this origin to that service's
+`CORS_ORIGINS`. Full walkthrough, including the failure modes worth knowing about:
+**[docs/deployment.md](docs/deployment.md)**.
+
 ---
 
 ## Accessibility
