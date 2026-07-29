@@ -1,7 +1,11 @@
 /**
  * Zod schemas for the Zyndicate backend contract (base /api/v1).
- * The backend is being built in parallel, so entity schemas are tolerant:
- * unknown fields pass through, most fields are optional with safe defaults.
+ *
+ * Entities keep `.passthrough()` so additive backend fields never break the
+ * client, and genuinely optional fields stay optional. What they deliberately
+ * do NOT tolerate is a wrong shape: no `.catch([])` fallbacks, because those
+ * turned a broken contract into a friendly "nothing here yet" empty state.
+ * A shape mismatch now fails the parse and surfaces as an error state.
  */
 import { z } from "zod";
 
@@ -21,7 +25,8 @@ export const MANDATE_STATES = [
 
 export type MandateState = (typeof MANDATE_STATES)[number];
 
-export const MandateStateSchema = z.enum(MANDATE_STATES).catch("draft");
+/** The backend's closed set of states. An unknown state is a contract break. */
+export const MandateStateSchema = z.enum(MANDATE_STATES);
 
 /**
  * The backend serializes instants as epoch milliseconds. ISO strings are
