@@ -154,18 +154,15 @@ function ReceiptsCard() {
       )}
       {receipts.isSuccess && receipts.data.length > 0 && (
         <ul className="divide-y divide-line">
-          {receipts.data.map((r, i) => (
-            <li key={r.id ?? i} className="flex flex-wrap items-center justify-between gap-3 py-3">
+          {receipts.data.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
               <div>
-                <p className="text-sm font-medium text-bone">
-                  {humanize(r.kind ?? "completion receipt")}
-                </p>
+                <p className="text-sm font-medium text-bone">{humanize(r.kind)} receipt</p>
                 <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-dim">
-                  {r.domain ? `${domainLabel(r.domain)} · ` : ""}
                   {formatDate(r.issuedAt)}
                 </p>
               </div>
-              {r.commitment && <CopyButton value={r.commitment} label="receipt commitment" />}
+              <CopyButton value={r.receiptCommitment} label="receipt commitment" />
             </li>
           ))}
         </ul>
@@ -182,7 +179,9 @@ function CredentialsCard() {
   const [kind, setKind] = useState("");
   const [error, setError] = useState<string | undefined>();
 
-  const credentials = passport.data?.credentials ?? [];
+  // The passport exposes no credential list — a credential's only public trace
+  // is the domain it qualifies. That is what the server is willing to say.
+  const domains = passport.data?.domains ?? [];
 
   const handleAdd = async (e: FormEvent) => {
     e.preventDefault();
@@ -206,17 +205,16 @@ function CredentialsCard() {
   return (
     <Card>
       <CardHeader eyebrow="Capability credentials" title="Prove, don't publish" />
-      {credentials.length > 0 ? (
+      {domains.length > 0 ? (
         <ul className="mb-4 divide-y divide-line">
-          {credentials.map((c, i) => (
-            <li key={c.id ?? i} className="flex flex-wrap items-center justify-between gap-3 py-3">
+          {domains.map((d) => (
+            <li key={d} className="flex flex-wrap items-center justify-between gap-3 py-3">
               <div>
-                <p className="text-sm font-medium text-bone">{c.kind}</p>
+                <p className="text-sm font-medium text-bone">{domainLabel(d)}</p>
                 <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-dim">
-                  {domainLabel(c.domain)} · {formatDate(c.issuedAt)}
+                  Qualified — credential held, contents never published
                 </p>
               </div>
-              {c.commitment && <CopyButton value={c.commitment} label="credential commitment" />}
             </li>
           ))}
         </ul>
