@@ -16,9 +16,9 @@ export function truncateMiddle(value: string, head = 10, tail = 6): string {
   return `${value.slice(0, head)}…${value.slice(-tail)}`;
 }
 
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
+export function formatDate(value: TimestampInput): string {
+  if (value === null || value === undefined || value === "") return "—";
+  const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString(undefined, {
     year: "numeric",
