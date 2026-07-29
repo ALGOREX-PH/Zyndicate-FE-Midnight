@@ -27,9 +27,9 @@ export function formatDate(value: TimestampInput): string {
   });
 }
 
-export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
+export function formatDateTime(value: TimestampInput): string {
+  if (value === null || value === undefined || value === "") return "—";
+  const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString(undefined, {
     year: "numeric",
