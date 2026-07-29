@@ -107,18 +107,12 @@ function ReputationCard() {
       {passport.isSuccess && (
         <DefinitionList
           items={[
-            {
-              label: "Identity class",
-              value: passport.data.identityClass ?? "Unverified",
-            },
-            {
-              label: "Completion band",
-              value: passport.data.completionBand ?? "None yet",
-            },
+            { label: "Identity class", value: humanize(passport.data.identityClass) },
+            { label: "Completion band", value: humanize(passport.data.completionBand) },
             {
               label: "Qualified domains",
               value:
-                passport.data.domains && passport.data.domains.length > 0
+                passport.data.domains.length > 0
                   ? passport.data.domains.map(domainLabel).join(", ")
                   : "None yet",
             },

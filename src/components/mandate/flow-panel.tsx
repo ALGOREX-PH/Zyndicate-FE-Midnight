@@ -77,7 +77,7 @@ function SubmissionSection({ mandate }: { mandate: MandateDto }) {
               <option value="">Select artifact…</option>
               {(artifacts.data ?? []).map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.name} (v{a.version ?? "1"})
+                  {a.name} (v{a.version})
                 </option>
               ))}
             </Select>
