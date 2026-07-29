@@ -154,22 +154,31 @@ export type PaginatedMandates = z.infer<typeof PaginatedMandatesSchema>;
 
 /* ---------------------------------- bids ---------------------------------- */
 
+export const BID_STATUSES = ["pending", "withdrawn", "awarded", "rejected"] as const;
+export type BidStatus = (typeof BID_STATUSES)[number];
+
 export const BidSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String),
-    mandateId: z.union([z.string(), z.number()]).transform(String).nullish(),
-    bidCommitment: z.string().nullish(),
-    bidNullifier: z.string().nullish(),
-    encryptedBid: EncryptedPayloadSchema.nullish(),
-    operatorPublicKey: z.string().nullish(),
-    state: z.string().nullish(),
-    mine: z.boolean().nullish(),
+    id: z.string(),
+    mandateId: z.string(),
+    /** Bidding operator's public key — the "is this mine?" signal. */
+    operatorKey: z.string(),
+    bidCommitment: z.string(),
+    bidNullifier: z.string(),
+    status: z.enum(BID_STATUSES),
     createdAt: TimestampSchema,
+    updatedAt: TimestampSchema,
+    /** Present for rows the caller is entitled to decrypt. */
+    encryptedBid: EncryptedPayloadSchema.optional(),
   })
   .passthrough();
 
 export type BidDto = z.infer<typeof BidSchema>;
-export const BidListSchema = z.array(BidSchema).catch([]);
+
+/** `POST /mandates/:id/bids`, `DELETE /mandates/:id/bids/:bidId`. */
+export const BidEnvelopeSchema = envelope("bid", BidSchema);
+/** `GET /mandates/:id/bids` → `{ items }`. */
+export const BidListSchema = itemsOf(BidSchema);
 
 /* -------------------------------- workrooms ------------------------------- */
 
