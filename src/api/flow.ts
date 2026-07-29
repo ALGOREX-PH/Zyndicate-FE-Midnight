@@ -3,8 +3,15 @@
  * vault view and the tribunal (disputes + rulings).
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, qs } from "./client";
-import { DisputeListSchema, DisputeSchema, OkSchema, VaultSchema } from "./schemas";
+import { api } from "./client";
+import {
+  DisputeEnvelopeSchema,
+  DisputeListSchema,
+  EvaluationEnvelopeSchema,
+  SettlementEnvelopeSchema,
+  SubmissionEnvelopeSchema,
+  VaultEnvelopeSchema,
+} from "./schemas";
 
 /* ------------------------------- submissions ------------------------------ */
 
@@ -18,7 +25,7 @@ export function useCommitSubmission(mandateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: SubmissionBody) =>
-      api(OkSchema, `/mandates/${mandateId}/submissions`, { method: "POST", body }),
+      api(SubmissionEnvelopeSchema, `/mandates/${mandateId}/submissions`, { method: "POST", body }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["mandate", mandateId] });
     },
@@ -39,7 +46,7 @@ export function useRecordEvaluation(mandateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: EvaluationBody) =>
-      api(OkSchema, `/mandates/${mandateId}/evaluations`, { method: "POST", body }),
+      api(EvaluationEnvelopeSchema, `/mandates/${mandateId}/evaluations`, { method: "POST", body }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["mandate", mandateId] });
     },
@@ -52,7 +59,7 @@ export function useSettle(mandateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (settlementNullifier: string) =>
-      api(OkSchema, `/mandates/${mandateId}/settle`, {
+      api(SettlementEnvelopeSchema, `/mandates/${mandateId}/settle`, {
         method: "POST",
         body: { settlementNullifier },
       }),
@@ -66,7 +73,7 @@ export function useSettle(mandateId: string) {
 export function useVault(mandateId: string | undefined) {
   return useQuery({
     queryKey: ["vault", mandateId],
-    queryFn: () => api(VaultSchema, `/vault/${mandateId}`),
+    queryFn: () => api(VaultEnvelopeSchema, `/vault/${mandateId}`),
     enabled: !!mandateId,
     retry: false,
   });
@@ -74,10 +81,14 @@ export function useVault(mandateId: string | undefined) {
 
 /* --------------------------------- tribunal ------------------------------- */
 
-export function useDisputes(mine = true) {
+/**
+ * GET /disputes is always scoped to the caller — there is no unscoped listing,
+ * so no query parameter is sent.
+ */
+export function useDisputes() {
   return useQuery({
-    queryKey: ["disputes", { mine }],
-    queryFn: () => api(DisputeListSchema, `/disputes${qs({ mine: mine ? "1" : undefined })}`),
+    queryKey: ["disputes"],
+    queryFn: () => api(DisputeListSchema, "/disputes"),
   });
 }
 
@@ -85,7 +96,7 @@ export function useOpenDispute(mandateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (disputeCommitment: string) =>
-      api(DisputeSchema, `/mandates/${mandateId}/disputes`, {
+      api(DisputeEnvelopeSchema, `/mandates/${mandateId}/disputes`, {
         method: "POST",
         body: { disputeCommitment },
       }),
@@ -105,7 +116,7 @@ export function useRecordRuling() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ disputeId, ...body }: RulingBody & { disputeId: string }) =>
-      api(OkSchema, `/disputes/${disputeId}/ruling`, { method: "POST", body }),
+      api(DisputeEnvelopeSchema, `/disputes/${disputeId}/ruling`, { method: "POST", body }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["disputes"] });
       void queryClient.invalidateQueries({ queryKey: ["mandates"] });
