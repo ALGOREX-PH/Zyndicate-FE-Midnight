@@ -9,6 +9,7 @@ import { useAcceptAward, useBids, useWithdrawBid } from "../../api/bids";
 import { decryptJson, getBidKey } from "../../lib/crypto";
 import { getChain } from "../../midnight/chain";
 import { useNetworkStore } from "../../store/network";
+import { useSessionStore } from "../../store/session";
 import { toast } from "../../store/toast";
 
 interface BidContents {
@@ -46,14 +47,20 @@ export function OperatorPanel({ mandate }: { mandate: MandateDto }) {
   const withdraw = useWithdrawBid(mandate.id);
   const acceptAward = useAcceptAward(mandate.id);
   const networkId = useNetworkStore((s) => s.networkId);
+  const myKey = useSessionStore((s) => s.publicKey);
 
-  const ownBid = bids.data?.find((b) => b.mine);
+  // GET /mandates/:id/bids returns only the caller's own rows to a
+  // non-principal, but match on operatorKey so the principal's view is right
+  // too. `mine` was never a backend field.
+  const ownBid = myKey
+    ? bids.data?.find((b) => b.operatorKey === myKey && b.status !== "withdrawn")
+    : undefined;
   const contents = useOwnBidContents(mandate.id, ownBid);
 
   const wonAward =
     !!ownBid &&
     (mandate.state === "awarded" || mandate.state === "in_execution") &&
-    (ownBid.state === "awarded" ||
+    (ownBid.status === "awarded" ||
       (mandate.awardedBidId != null && mandate.awardedBidId === ownBid.id));
 
   const handleAccept = () => {
