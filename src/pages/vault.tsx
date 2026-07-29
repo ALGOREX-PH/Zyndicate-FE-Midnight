@@ -43,14 +43,17 @@ function VaultRow({ mandate }: { mandate: MandateDto }) {
       <td className="px-4 py-3 font-mono text-xs text-fog">
         {vault.isPending && <Skeleton className="h-4 w-16" />}
         {vault.isError && <span className="text-dim">—</span>}
-        {vault.isSuccess && (vault.data.amountBand ?? "Sealed")}
+        {vault.isSuccess && "Sealed"}
       </td>
       <td className="px-4 py-3 font-mono text-xs text-fog">
-        {vault.isSuccess && vault.data.state ? humanize(vault.data.state) : "—"}
+        {vault.isSuccess ? humanize(vault.data.state) : "—"}
       </td>
       <td className="px-4 py-3">
-        {vault.isSuccess && vault.data.settlementNullifier ? (
-          <CopyButton value={vault.data.settlementNullifier} label="settlement nullifier" />
+        {vault.isSuccess && vault.data.settlement ? (
+          <CopyButton
+            value={vault.data.settlement.settlementNullifier}
+            label="settlement nullifier"
+          />
         ) : (
           <span className="font-mono text-xs text-dim">—</span>
         )}
