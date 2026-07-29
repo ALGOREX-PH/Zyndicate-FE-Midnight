@@ -64,24 +64,32 @@ export function itemsOf<T extends z.ZodTypeAny>(inner: T) {
 
 /* --------------------------------- auth ---------------------------------- */
 
-export const ChallengeSchema = z.object({ nonce: z.string() }).passthrough();
+/** `POST /auth/challenge` → `{ nonce, expiresAt }` — no envelope. */
+export const ChallengeSchema = z
+  .object({ nonce: z.string(), expiresAt: z.string() })
+  .passthrough();
 
 export const IdentitySchema = z
   .object({
-    publicKey: z.string().optional(),
-    displayName: z.string().nullish(),
+    publicKey: z.string(),
+    displayName: z.string().nullable(),
+    roleHints: z.array(z.string()),
     createdAt: TimestampSchema,
   })
   .passthrough();
 
+/** `POST /auth/verify` → `{ token, identity }` — no envelope. */
 export const VerifySchema = z
   .object({
     token: z.string(),
-    identity: IdentitySchema.nullish(),
+    identity: IdentitySchema,
   })
   .passthrough();
 
 export type IdentityDto = z.infer<typeof IdentitySchema>;
+
+/** `GET /me`, `PUT /me` → `{ identity }`. */
+export const IdentityEnvelopeSchema = envelope("identity", IdentitySchema);
 
 /* -------------------------------- mandates -------------------------------- */
 
