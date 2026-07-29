@@ -314,7 +314,7 @@ Endpoints consumed:
 | ---- | --------- |
 | Auth | `POST /auth/challenge`, `POST /auth/verify`, `GET|PUT /me` |
 | Mandates | `GET|POST /mandates`, `GET /mandates/:id`, `POST /mandates/:id/state` |
-| Bidding | `GET|POST /mandates/:id/bids`, `GET /mandates/:id/bids/:bidId`, `POST /mandates/:id/award`, `POST /mandates/:id/accept` |
+| Bidding | `GET|POST /mandates/:id/bids`, `DELETE /mandates/:id/bids/:bidId`, `POST /mandates/:id/award`, `POST /mandates/:id/accept` |
 | Execution | `POST /mandates/:id/submissions`, `POST /mandates/:id/evaluations`, `POST /mandates/:id/settle` |
 | Workrooms | `GET /workrooms/:mandateId`, `…/messages`, `…/artifacts` |
 | Vault | `GET /vault/:mandateId` |
@@ -323,6 +323,18 @@ Endpoints consumed:
 
 Every request body carries ciphertext and commitments only. The API is authenticated with a Bearer
 token obtained by signing an ed25519 challenge; a `401` clears the session automatically.
+
+**Response envelopes.** The backend wraps every single entity in a one-key envelope — `{ mandate }`,
+`{ bid }`, `{ workroom }`, `{ message }`, `{ artifact }`, `{ vault }`, `{ dispute }`, `{ passport }`,
+`{ credential }`, `{ identity }` — and every list in `{ items }`, with `{ items, page, pageSize,
+total, totalPages }` where the list is paginated. `POST /auth/challenge` and `POST /auth/verify` are
+the only unwrapped responses. `src/api/schemas.ts` unwraps these with the `envelope()` and
+`itemsOf()` helpers. Timestamps are epoch-millisecond numbers throughout.
+
+**Validation is strict about shape, tolerant about additions.** Entity schemas keep `.passthrough()`
+so new backend fields never break the client, but there are no `.catch([])` fallbacks: a response
+whose shape does not match the contract raises `ApiError("malformed_response")` and the view shows
+its error state. A contract break must never masquerade as an empty list.
 
 **The app degrades gracefully when the backend is absent.** Auth failure is quiet and keeps the app
 browsable, and every data-driven view has explicit loading, empty, and error states — with a retry
