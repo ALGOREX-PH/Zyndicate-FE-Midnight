@@ -238,33 +238,87 @@ export const ArtifactListSchema = itemsOf(ArtifactSchema);
 
 /* ------------------------------ flow objects ------------------------------ */
 
-export const VaultSchema = z
+export const SubmissionSchema = z
   .object({
-    mandateId: z.union([z.string(), z.number()]).transform(String).nullish(),
-    state: z.string().nullish(),
-    amountBand: z.string().nullish(),
-    asset: z.string().nullish(),
-    settlementNullifier: z.string().nullish(),
+    id: z.string(),
+    mandateId: z.string(),
+    artifactId: z.string(),
+    submissionCommitment: z.string(),
+    digest: z.string(),
+    submittedAt: TimestampSchema,
+  })
+  .passthrough();
+
+/** `POST /mandates/:id/submissions` → `{ submission, state }`. */
+export const SubmissionEnvelopeSchema = envelope("submission", SubmissionSchema);
+
+export const EVALUATION_VERDICTS = ["accept", "reject", "revise"] as const;
+
+export const EvaluationSchema = z
+  .object({
+    id: z.string(),
+    mandateId: z.string(),
+    evaluatorKey: z.string(),
+    verdict: z.enum(EVALUATION_VERDICTS),
+    evaluationCommitment: z.string(),
+    attestation: z.string(),
+    createdAt: TimestampSchema,
+  })
+  .passthrough();
+
+/** `POST /mandates/:id/evaluations` → `{ evaluation, state }`. */
+export const EvaluationEnvelopeSchema = envelope("evaluation", EvaluationSchema);
+
+export const SettlementSchema = z
+  .object({
+    mandateId: z.string().nullish(),
+    settlementNullifier: z.string(),
+    amountCommitment: z.string().nullish(),
     settledAt: TimestampSchema,
   })
   .passthrough();
 
+export type SettlementDto = z.infer<typeof SettlementSchema>;
+
+/** `POST /mandates/:id/settle` → `{ settlement, state, receipts }`. */
+export const SettlementEnvelopeSchema = envelope("settlement", SettlementSchema);
+
+export const VaultSchema = z
+  .object({
+    mandateId: z.string(),
+    /** The mandate's state, mirrored — the vault has no state of its own. */
+    state: z.string(),
+    disputeOpen: z.boolean(),
+    /** `null` until settlement is released. */
+    settlement: SettlementSchema.nullable(),
+  })
+  .passthrough();
+
 export type VaultDto = z.infer<typeof VaultSchema>;
+export const VaultEnvelopeSchema = envelope("vault", VaultSchema);
+
+export const DISPUTE_STATUSES = ["open", "ruled"] as const;
+export const DISPUTE_OUTCOMES = ["release", "refund"] as const;
 
 export const DisputeSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String),
-    mandateId: z.union([z.string(), z.number()]).transform(String).nullish(),
-    state: z.string().nullish(),
-    outcome: z.string().nullish(),
-    disputeCommitment: z.string().nullish(),
+    id: z.string(),
+    mandateId: z.string(),
+    openedBy: z.string().nullish(),
+    disputeCommitment: z.string(),
+    status: z.enum(DISPUTE_STATUSES),
     rulingCommitment: z.string().nullish(),
+    outcome: z.enum(DISPUTE_OUTCOMES).nullish(),
+    ruledAt: TimestampSchema,
     createdAt: TimestampSchema,
   })
   .passthrough();
 
 export type DisputeDto = z.infer<typeof DisputeSchema>;
-export const DisputeListSchema = z.array(DisputeSchema).catch([]);
+/** `POST /mandates/:id/disputes` and `POST /disputes/:id/ruling` → `{ dispute, state }`. */
+export const DisputeEnvelopeSchema = envelope("dispute", DisputeSchema);
+/** `GET /disputes` → `{ items }`. */
+export const DisputeListSchema = itemsOf(DisputeSchema);
 
 /* -------------------------------- passport -------------------------------- */
 
