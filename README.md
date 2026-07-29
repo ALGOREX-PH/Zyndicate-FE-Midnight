@@ -382,3 +382,58 @@ Vendor code is split into cacheable chunks via `build.rollupOptions.output.manua
 application chunk small and lets the framework bundles stay in cache across deploys. Fonts are
 bundled locally as woff2/woff, so the production app makes **no third-party network requests** on
 load — appropriate for a privacy product, where a font CDN would otherwise observe every page view.
+
+---
+
+## Accessibility
+
+PRD §24.5 treats accessibility as a correctness requirement rather than a polish item, on the
+reasoning that a privacy tool nobody can operate confidently is not a privacy tool. What is
+implemented:
+
+* **Keyboard navigation.** Every interactive control is a real `<button>`, `<a>`, or form element.
+  The tab list (`components/ui/tabs.tsx`) implements arrow-key roving focus with wraparound. Modals
+  use the native `<dialog>` element with `showModal()`, so focus trapping, `Esc` to dismiss, and an
+  inert background come from the platform rather than from hand-rolled listeners that drift out of
+  correctness.
+* **Visible focus.** A global `:focus-visible` rule paints a 2px `vio` outline with offset, applied
+  from the base layer so no component can silently opt out.
+* **Screen-reader labelling.** 42 `aria-label`s, plus `aria-current` for active navigation,
+  `aria-invalid` + `aria-describedby` wiring inputs to their error text, `role="alert"` on field
+  errors, `aria-busy` on pending regions, and `aria-hidden` on the decorative glyphs (`◇`, `⚿`, `≡`)
+  so they are not announced. Purely visual loading skeletons are paired with `sr-only` text.
+* **Live regions.** The toaster is an `aria-live="polite"` region, so confirmations such as "mandate
+  sealed" are announced without stealing focus mid-task.
+* **No dependence on colour alone.** State pills pair colour with a text label, and proof/verified
+  states carry a `✓` glyph alongside `phosphor` green — so the verified/unverified distinction
+  survives monochrome rendering and the common forms of colour blindness.
+* **Contrast.** `bone` on `ink` is a very high-contrast pairing; `fog` and `dim` are reserved for
+  secondary and tertiary text respectively, never for essential single-source information.
+* **Reduced motion.** A `prefers-reduced-motion: reduce` block in the base layer collapses all
+  animation, transition, and scroll behaviour globally.
+* **Plain-language privacy copy.** Privacy previews and key-recovery instructions are written for
+  non-cryptographers — "Sealed. Only key holders ever read it." rather than an algorithm name — which
+  §24.5 requires explicitly.
+
+Known gaps: there is no skip-to-content link, and the app has not yet been tested against a real
+screen reader (NVDA/VoiceOver) or audited for WCAG AA conformance end to end.
+
+---
+
+## Status
+
+* **Working:** all eleven routes render; client-side AES-256-GCM encryption, SHA-256 commitments with
+  per-item salts, and nullifier derivation are implemented end to end; Lace discovery and connection
+  are real; the full mandate lifecycle is wired through the API layer; strict TypeScript passes and
+  the production build is clean.
+* **Stand-in:** `LocalChainAdapter` records protocol transitions locally instead of submitting
+  Midnight transactions, and flags every receipt it produces as `local`.
+* **Not built:** zk proof generation, contract deployment, on-chain settlement, and automated tests.
+
+---
+
+## References
+
+* `PRD.md` in this repository — the full product requirements document
+* [Midnight Network documentation](https://docs.midnight.network/)
+* Companion repository: **Zyndicate-Smart-Contract-Midnight** (Compact contracts)
