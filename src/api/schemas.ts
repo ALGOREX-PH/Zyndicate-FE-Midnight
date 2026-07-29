@@ -133,13 +133,18 @@ export type MandateDto = z.infer<typeof MandateSchema>;
 /** `POST /mandates`, `GET /mandates/:id`, `/state`, `/award`, `/accept`. */
 export const MandateEnvelopeSchema = envelope("mandate", MandateSchema);
 
+/**
+ * `{ items, page, pageSize, total, totalPages }`. No `.catch` fallbacks: a
+ * contract break must surface as an error state, not as "nothing here yet".
+ */
 export function paginated<T extends z.ZodTypeAny>(item: T) {
   return z
     .object({
-      items: z.array(item).catch([]),
-      total: z.number().catch(0),
-      page: z.number().catch(1),
-      pageSize: z.number().catch(20),
+      items: z.array(item),
+      total: z.number(),
+      page: z.number(),
+      pageSize: z.number(),
+      totalPages: z.number().optional(),
     })
     .passthrough();
 }
