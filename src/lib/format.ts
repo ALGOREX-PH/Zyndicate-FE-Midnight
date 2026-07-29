@@ -1,5 +1,11 @@
 /** Shared formatting + tiny class-name helpers. */
 
+/**
+ * Instants arrive from the API as epoch milliseconds, but ISO strings are
+ * accepted too so either serialization renders correctly.
+ */
+export type TimestampInput = string | number | null | undefined;
+
 export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
 }
