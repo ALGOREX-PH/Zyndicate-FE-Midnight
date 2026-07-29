@@ -59,9 +59,10 @@ function DetailBody({ mandate }: { mandate: MandateDto }) {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="min-w-0 space-y-6">
-          {isPrincipal ? (
-            <PrincipalPanel mandate={mandate} />
-          ) : (
+          {/* The evaluator neither bids nor awards — their action lives in the
+              flow panel, so neither bidding panel applies to them. */}
+          {viewerRole === "principal" && <PrincipalPanel mandate={mandate} />}
+          {viewerRole !== "principal" && viewerRole !== "evaluator" && (
             <OperatorPanel mandate={mandate} />
           )}
           <FlowPanel mandate={mandate} viewerRole={viewerRole} />
