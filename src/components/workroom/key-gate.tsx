@@ -28,7 +28,7 @@ export function KeyGate({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-phosphor">
-              ✓ Workroom key held
+              <span aria-hidden="true">✓</span> Workroom key held
             </p>
             <p className="mt-1 text-xs text-fog">
               Messages and artifacts decrypt on this device. Share the key with your counterparty
@@ -56,7 +56,7 @@ export function KeyGate({
   return (
     <Card className="border-amber/30">
       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-amber">
-        ⚿ Workroom sealed
+        <span aria-hidden="true">⚿</span> Workroom sealed
       </p>
       <p className="mt-1 text-xs text-fog">
         This device does not hold the mandate key, so messages and artifacts stay ciphertext.
