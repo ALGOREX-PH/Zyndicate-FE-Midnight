@@ -198,3 +198,58 @@ local one inside `getChain()` — **no UI code changes**. That is the entire rea
 
 The proof server is always configured as `localhost:6300`, including for the public testnets, because
 proof generation consumes private witness data and must never leave the operator's machine.
+
+---
+
+## Routes
+
+Routing is `react-router` v7 in `BrowserRouter` mode, declared in [`src/App.tsx`](src/App.tsx). The
+landing page renders standalone; every other route renders inside `AppShell` (sidebar, topbar,
+network badge, identity chip, wallet button, toaster). The whole tree is wrapped in an
+`ErrorBoundary`.
+
+| Route | Page | Purpose |
+| ----- | ---- | ------- |
+| `/` | `pages/landing.tsx` | Brand entry — hero, six-stage lifecycle with a ledger-vs-sealed split per stage, closing call to action |
+| `/exchange` | `pages/exchange.tsx` | Discovery. Public mandate summaries only, with domain/state/mine filters and pagination |
+| `/mandates/new` | `pages/compose.tsx` | Four-step mandate composer: outcome & context → eligibility & covenant → budget & deadlines → review & seal |
+| `/mandates/:id` | `pages/mandate-detail.tsx` | Mandate record, state timeline, role-aware principal/operator panels, bid composer, vault card, flow panel |
+| `/workrooms` | `pages/workrooms-index.tsx` | Every awarded mandate with an encrypted room |
+| `/workrooms/:mandateId` | `pages/workroom.tsx` | The encrypted room — key gate, message thread, artifact panel |
+| `/passport` | `pages/passport.tsx` | Identity, coarse public reputation, proof receipts, capability credentials |
+| `/vault` | `pages/vault.tsx` | Escrow across mandates; each vault releases exactly once |
+| `/tribunal` | `pages/tribunal.tsx` | Frozen settlements awaiting a ruling, scoped to what each disclosure covenant authorizes |
+| `/settings` | `pages/settings.tsx` | Network selection, Lace connection, identity and keyring management |
+| `*` | `pages/not-found.tsx` | 404 |
+
+## Design system
+
+The visual direction is **"classified terminal"** — intelligent, controlled, selective, technically
+formidable, slightly mysterious; neither anarchic nor sterile (PRD §5.1). Deep blue-violet near-black
+surfaces, bone text, hairline borders, near-square 2px radii, and a faint SVG grain overlay so large
+dark surfaces do not read as flat plastic.
+
+Tailwind v4 is configured **CSS-first** via `@theme` in [`src/styles/index.css`](src/styles/index.css)
+— there is no `tailwind.config.js`.
+
+| Token | Value | Use |
+| ----- | ----- | --- |
+| `ink` / `panel` / `raise` | `#07070e` / `#0c0c16` / `#12121f` | Surface elevation |
+| `line` / `line-strong` | `#1f1f33` / `#30304e` | Hairline borders |
+| `bone` / `fog` / `dim` | `#ecebf3` / `#a3a0b8` / `#6b6883` | Text hierarchy |
+| `phosphor` | `#49f0a8` | **Reserved** for proof / verified / settled states only |
+| `vio` | `#8d7bf5` | Interactive accent — focus, links, active states |
+| `amber` / `danger` | `#e0b35c` / `#ef6f6c` | Warning / error |
+
+`phosphor` being reserved is a deliberate constraint: green means *verified*, never merely
+*decorative*, so a proof receipt cannot be visually confused with a styling choice.
+
+**Typography** — three self-hosted families, bundled through `@fontsource` so the app makes no
+third-party font requests at runtime:
+
+* **Bricolage Grotesque Variable** (`--font-display`) — headings
+* **Schibsted Grotesk Variable** (`--font-sans`) — body
+* **Spline Sans Mono** (`--font-mono`) — hashes, commitments, keys, labels, eyebrows
+
+Monospace is used semantically: anything cryptographic or machine-generated is rendered in mono, so a
+commitment is visually distinguishable from prose at a glance.
