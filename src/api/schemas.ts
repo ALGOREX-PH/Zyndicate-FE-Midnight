@@ -324,44 +324,52 @@ export const DisputeListSchema = itemsOf(DisputeSchema);
 
 export const CredentialSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String).nullish(),
-    domain: z.string().catch("unspecified"),
-    kind: z.string().catch("credential"),
-    commitment: z.string().nullish(),
+    id: z.string(),
+    passportKey: z.string().nullish(),
+    domain: z.string(),
+    kind: z.string(),
+    commitment: z.string(),
+    revokedAt: TimestampSchema,
     issuedAt: TimestampSchema,
   })
   .passthrough();
 
 export type CredentialDto = z.infer<typeof CredentialSchema>;
+/** `POST /passports/credentials` → `{ credential }`. */
+export const CredentialEnvelopeSchema = envelope("credential", CredentialSchema);
+
+export const RECEIPT_KINDS = ["completion", "payment", "evaluation"] as const;
 
 export const ReceiptSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String).nullish(),
-    mandateId: z.union([z.string(), z.number()]).transform(String).nullish(),
-    kind: z.string().nullish(),
-    domain: z.string().nullish(),
-    commitment: z.string().nullish(),
+    id: z.string(),
+    mandateId: z.string().nullish(),
+    holderKey: z.string().nullish(),
+    kind: z.enum(RECEIPT_KINDS),
+    receiptCommitment: z.string(),
     issuedAt: TimestampSchema,
   })
   .passthrough();
 
 export type ReceiptDto = z.infer<typeof ReceiptSchema>;
-export const ReceiptListSchema = z.array(ReceiptSchema).catch([]);
+/** `GET /me/receipts` → `{ items }`. */
+export const ReceiptListSchema = itemsOf(ReceiptSchema);
 
+/**
+ * The coarse public passport. There is no credential or receipt list on it:
+ * `domains` is the only public trace of registered credentials, and receipts
+ * are read from `GET /me/receipts` by their holder alone.
+ */
 export const PassportSchema = z
   .object({
-    publicKey: z.string().nullish(),
-    displayName: z.string().nullish(),
-    identityClass: z.string().nullish(),
-    completionBand: z.string().nullish(),
-    domains: z.array(z.string()).nullish(),
-    credentials: z.array(CredentialSchema).nullish(),
-    receipts: z.array(ReceiptSchema).nullish(),
+    publicKey: z.string(),
+    identityClass: z.string(),
+    domains: z.array(z.string()),
+    completionBand: z.string(),
+    activeSince: TimestampSchema,
   })
   .passthrough();
 
 export type PassportDto = z.infer<typeof PassportSchema>;
-
-/* --------------------------------- misc ----------------------------------- */
-
-export const OkSchema = z.object({}).passthrough();
+/** `GET /passports/:publicKey` → `{ passport }`. */
+export const PassportEnvelopeSchema = envelope("passport", PassportSchema);
